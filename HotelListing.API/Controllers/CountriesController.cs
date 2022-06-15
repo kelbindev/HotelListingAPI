@@ -19,7 +19,7 @@ namespace HotelListing.API.Controllers
         private readonly IMapper _mapper;
         private readonly ICountriesRepository _countriesRepository;
 
-        public CountriesController( IMapper mapper, ICountriesRepository countriesRepository)
+        public CountriesController(IMapper mapper, ICountriesRepository countriesRepository)
         {
             _mapper = mapper;
             this._countriesRepository = countriesRepository;
@@ -61,17 +61,16 @@ namespace HotelListing.API.Controllers
                 return BadRequest();
             }
 
-            var country = await _countriesRepository.GetAsync(putCountryDTO.Id);
-
-            if (country == null)
-            {
-                return NotFound();
-            }
-
-            _mapper.Map(putCountryDTO, country);
-
             try
             {
+                var country = await _countriesRepository.GetAsync(putCountryDTO.Id);
+
+                if (country == null)
+                {
+                    return NotFound();
+                }
+
+                _mapper.Map(putCountryDTO, country);
                 await _countriesRepository.UpdateAsync(country);
             }
             catch (DbUpdateConcurrencyException)
@@ -109,7 +108,7 @@ namespace HotelListing.API.Controllers
             {
                 return NotFound();
             }
-            
+
             await _countriesRepository.DeleteAsync(id);
 
             return NoContent();
