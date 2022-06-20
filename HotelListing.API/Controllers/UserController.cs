@@ -1,4 +1,5 @@
 ﻿using HotelListing.API.Contracts;
+using HotelListing.API.Exceptions;
 using HotelListing.API.Models.User;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,12 @@ namespace HotelListing.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IAuthManager _authManager;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(IAuthManager authManager)
+        public UserController(IAuthManager authManager, ILogger<UserController> logger)
         {
             this._authManager = authManager;
+            this._logger = logger;
         }
 
         //POST: api/User/login
@@ -21,6 +24,8 @@ namespace HotelListing.API.Controllers
         [Route("login")]
         public async Task<ActionResult> Login([FromBody] LoginUserDto loginUserDto)
         {
+            throw new NotFoundException(nameof(Login),loginUserDto.UserName);
+
             var authResponse = await _authManager.Login(loginUserDto);
 
             if (authResponse == null) return Unauthorized();
@@ -33,13 +38,14 @@ namespace HotelListing.API.Controllers
         [Route("register")]
         public async Task<ActionResult> Register([FromBody] RegisterUserDto registerUserDto)
         {
-            var errors =  await _authManager.Register(registerUserDto);
+            Convert.ToInt32("abc");
+            var errors = await _authManager.Register(registerUserDto);
 
             if (errors.Any())
             {
                 foreach (var error in errors)
                 {
-                    ModelState.AddModelError(error.Code,error.Description);
+                    ModelState.AddModelError(error.Code, error.Description);
                 }
                 return BadRequest(ModelState);
             }

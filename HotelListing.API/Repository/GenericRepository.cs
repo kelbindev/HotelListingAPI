@@ -1,5 +1,8 @@
-﻿using HotelListing.API.Contracts;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using HotelListing.API.Contracts;
 using HotelListing.API.Data;
+using HotelListing.API.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.API.Repository
@@ -7,10 +10,12 @@ namespace HotelListing.API.Repository
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         private readonly HotelListingDBContext _context;
-
-        public GenericRepository(HotelListingDBContext context)
+        private readonly IMapper _mapper;
+        
+        public GenericRepository(HotelListingDBContext context, IMapper mapper)
         {
             this._context = context;
+            this._mapper = mapper;
         }
         public async Task<T> AddAsync(T entity)
         {
@@ -37,15 +42,42 @@ namespace HotelListing.API.Repository
             return await _context.Set<T>().ToListAsync();
         }
 
+        public async Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters)
+        {
+            var totalSize = await _context.Set<T>().CountAsync();
+            var items = await _context.Set<T>()
+                .Skip(queryParameters.StartIndex)
+                .Take(queryParameters.PageSize)
+                .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return new PagedResult<TResult>
+            {
+                Items = items,
+                RecordNumber  = queryParameters.PageSize,
+                TotalCount = totalSize
+            };
+        }
+
         public async Task<T> GetAsync(int? id)
         {
-            if (id is null)
+            if (id == null)
             {
                 return null;
             }
 
             return await _context.Set<T>().FindAsync(id);
         }
+
+        //public async Task<TResult> GetAsync<TResult>(int? id, QueryParameters queryParameters)
+        //{
+        //    if (id == null)
+        //    {
+        //        return null;
+        //    }
+
+        //    return await _context.Set<T>().ProjectTo<TResult>(_mapper.ConfigurationProvider).FindAsync(id);
+        //}
 
         public async Task UpdateAsync(T entity)
         {

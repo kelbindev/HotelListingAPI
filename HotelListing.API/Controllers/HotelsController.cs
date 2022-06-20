@@ -10,6 +10,7 @@ using HotelListing.API.Contracts;
 using AutoMapper;
 using HotelListing.API.Models.Hotel;
 using Microsoft.AspNetCore.Authorization;
+using HotelListing.API.Models;
 
 namespace HotelListing.API.Controllers
 {
@@ -26,13 +27,21 @@ namespace HotelListing.API.Controllers
             this._mapper = mapper;
         }
 
-        // GET: api/Hotels
-        [HttpGet]
+        // GET: api/Hotels/GetAll
+        [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<GetHotelDTO>>> GetHotels()
         {
             var hotels = await _hotelsRepository.GetAllAsync();
             var hotelsDto = _mapper.Map<List<GetHotelDTO>>(hotels);
             return Ok(hotelsDto);
+        }
+        // GET: api/Hotels/?StartIndex=0&PageSize=3&PageNumber=1
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<GetHotelDTO>>> GetPagedHotels([FromQuery] QueryParameters queryParameters)
+        {
+            var hotels = await _hotelsRepository.GetAllAsync<GetHotelDTO>(queryParameters);
+
+            return Ok(hotels);
         }
 
         // GET: api/Hotels/5
